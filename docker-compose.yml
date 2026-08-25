@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dep-radar-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-depradar}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-depradar_secret}
+      POSTGRES_DB: ${DB_NAME:-depradar}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-depradar} -d ${DB_NAME:-depradar}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    container_name: dep-radar-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: development
+      PORT: "8080"
+      DATABASE_URL: postgres://${DB_USER:-depradar}:${DB_PASSWORD:-depradar_secret}@postgres:5432/${DB_NAME:-depradar}?sslmode=disable
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/app/config:ro
+
+volumes:
+  postgres_data:
+    driver: local

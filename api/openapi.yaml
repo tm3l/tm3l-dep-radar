@@ -1,0 +1,228 @@
+openapi: 3.1.0
+info:
+  title: Dep Radar API
+  description: REST API for Dep Radar supply chain security scanner, dependency graph analysis, and vulnerability intelligence.
+  version: 1.0.0
+  contact:
+    name: Dep Radar Maintainers
+    url: https://github.com/tm3l/dep-radar
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Development Server
+
+paths:
+  /healthz:
+    get:
+      summary: Health check endpoint
+      description: Returns service health status
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: dep-radar-server
+
+  /scans:
+    post:
+      summary: Submit a new scan
+      description: Upload an SBOM (CycloneDX / SPDX) or package manifest for asynchronous vulnerability analysis.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: SBOM file (JSON or XML)
+                repo_url:
+                  type: string
+                  example: https://github.com/example/repo
+      responses:
+        '202':
+          description: Scan accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanJob'
+    get:
+      summary: List recent scans
+      description: Retrieve a paginated list of historical dependency scans.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of scans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scans:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ScanSummary'
+                  total:
+                    type: integer
+
+  /scans/{scanId}:
+    get:
+      summary: Get scan details
+      description: Retrieve detailed scan results including found vulnerabilities and summary statistics.
+      parameters:
+        - name: scanId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Scan details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanDetail'
+        '404':
+          description: Scan not found
+
+  /scans/{scanId}/graph:
+    get:
+      summary: Get dependency graph
+      description: Returns the full dependency node and edge graph with vulnerability metadata for the React explorer.
+      parameters:
+        - name: scanId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dependency graph structure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyGraph'
+
+components:
+  schemas:
+    ScanJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, scanning, analyzing, completed, failed]
+        created_at:
+          type: string
+          format: date-time
+
+    ScanSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        target:
+          type: string
+        status:
+          type: string
+        critical_count:
+          type: integer
+        high_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    ScanDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        target:
+          type: string
+        status:
+          type: string
+        total_dependencies:
+          type: integer
+        vulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vulnerability'
+
+    Vulnerability:
+      type: object
+      properties:
+        id:
+          type: string
+          example: GHSA-xxxx-xxxx-xxxx
+        cve_id:
+          type: string
+          example: CVE-2024-12345
+        package_name:
+          type: string
+        affected_version:
+          type: string
+        fixed_version:
+          type: string
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        summary:
+          type: string
+
+    DependencyGraph:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              version:
+                type: string
+              depth:
+                type: integer
+              vulnerability_count:
+                type: integer
+        edges:
+          type: array
+          items:
+            type: object
+            properties:
+              source:
+                type: string
+              target:
+                type: string
