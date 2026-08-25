@@ -1,41 +1,83 @@
+name: tm3l-dep-radar
+
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: dep-radar-postgres
-    restart: unless-stopped
+    image: postgres:17-alpine
+    container_name: dep-radar-db
     environment:
-      POSTGRES_USER: ${DB_USER:-depradar}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-depradar_secret}
-      POSTGRES_DB: ${DB_NAME:-depradar}
+      POSTGRES_USER: ${POSTGRES_USER:-depradar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-depradar_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-depradar_dev}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-depradar} -d ${DB_NAME:-depradar}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-depradar} -d ${POSTGRES_DB:-depradar_dev}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: dep-radar-pb
+    ports:
+      - "8092:8090"
+    volumes:
+      - pb_data:/pb_data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8090/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   server:
     build:
       context: .
       dockerfile: deploy/Dockerfile
     container_name: dep-radar-server
-    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "postgres://${POSTGRES_USER:-depradar}:${POSTGRES_PASSWORD:-depradar_secret}@postgres:5432/${POSTGRES_DB:-depradar_dev}?sslmode=disable"
+      POCKETBASE_URL: "http://pocketbase:8090"
+      ENV: "development"
+    ports:
+      - "8082:8080"
     depends_on:
       postgres:
         condition: service_healthy
+      pocketbase:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  explorer:
+    build:
+      context: ./explorer
+    container_name: dep-radar-explorer
     environment:
-      APP_ENV: development
-      PORT: "8080"
-      DATABASE_URL: postgres://${DB_USER:-depradar}:${DB_PASSWORD:-depradar_secret}@postgres:5432/${DB_NAME:-depradar}?sslmode=disable
+      VITE_API_URL: "http://localhost:8082"
+      VITE_PB_URL: "http://localhost:8092"
     ports:
-      - "8080:8080"
+      - "5174:5173"
     volumes:
-      - ./config:/app/config:ro
+      - ./explorer:/app
+      - /app/node_modules
+    deploy:
+      resources:
+        limits:
+          memory: 384M
 
 volumes:
   postgres_data:
-    driver: local
+  pb_data:
