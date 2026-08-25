@@ -5,7 +5,7 @@ info:
   version: 1.0.0
   contact:
     name: Dep Radar Maintainers
-    url: https://github.com/tm3l/dep-radar
+    url: https://github.com/tm3l/tm3l-dep-radar
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT

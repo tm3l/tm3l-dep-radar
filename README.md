@@ -63,7 +63,7 @@ Spin up the PostgreSQL database, API server, and admin portal:
 
 ```bash
 # Clone repository
-git clone https://github.com/tm3l/dep-radar.git
+git clone https://github.com/tm3l/tm3l-dep-radar.git
 cd dep-radar
 
 # Launch all services
