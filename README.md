@@ -68,3 +68,7 @@ Visit `http://localhost:5174` to explore the dependency graphs.
 
 ## 📚 Documentation
 See [`docs/architecture.md`](docs/architecture.md) for detailed internals.
+
+
+## Documentation
+- [Architecture & Specifications](docs/INDEX.md)
