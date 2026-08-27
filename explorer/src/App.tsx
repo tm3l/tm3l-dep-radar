@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function App() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
