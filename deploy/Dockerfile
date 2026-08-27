@@ -15,7 +15,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/bin/depradar-server ./cmd/server
 
 # Final lightweight production image
-FROM alpine:3.20
+FROM alpine:3.24
 
 WORKDIR /app
 
