@@ -7,13 +7,12 @@ on:
     branches: [ "main" ]
 
 jobs:
-  backend:
-    name: Backend (Go) – Build & Test
+  server:
+    name: Go Server – Build & Test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -33,16 +32,15 @@ jobs:
       - name: Vet
         run: go vet ./...
 
-  frontend:
-    name: Frontend (Explorer) – Build
+  explorer:
+    name: Explorer UI – Build
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: explorer
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v4
