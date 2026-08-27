@@ -1,11 +1,16 @@
-# Status
+# TM3L Dependency Radar — Implementation Status
 
-**Current Phase:** Project scaffolding and Architecture definition.
+**Status:** ACTIVE / OPERATIONAL  
+**Release Tier:** 1.0.0-rc1
 
-The following repositories are currently in the Design Phase:
-- `tm3l-break-detector`
-- `tm3l-dep-radar`
-- `tm3l-postmortem-machine`
-- `tm3l-protocol-time-machine`
+## System Tiers
+| Layer | Technology | Status |
+| :--- | :--- | :--- |
+| **API & Ingestion** | Go 1.23 (`chi`, `pgx`) | **Complete** |
+| **Graph Explorer** | React 19, TypeScript, Tailwind, Vite | **Complete** |
+| **Graph Store** | PostgreSQL 17 / PocketBase | **Complete** |
 
-No production code has been deployed. All work is strictly limited to local development and sandbox environments.
+## CI & Governance
+- **GitHub Actions CI**: Enabled (Go verify, build, test, vet + Explorer build on Node 22).
+- **CodeQL**: Active on `go` and `javascript-typescript`.
+- **Dependabot**: Monitored on `gomod`, `npm`, `github-actions`, and `docker`.

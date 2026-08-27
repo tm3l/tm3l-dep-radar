@@ -1,0 +1,40 @@
+openapi: 3.1.0
+info:
+  title: TM3L Dependency Radar API
+  description: Multi-Ecosystem Dependency Graph & Blast Radius Analysis API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8082
+    description: Local development server
+paths:
+  /api/health:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+  /api/v1/packages:
+    get:
+      summary: List monitored packages across Go, npm, and Cargo ecosystems
+      responses:
+        '200':
+          description: Package list returned
+  /api/v1/graphs/blast-radius:
+    post:
+      summary: Calculate dependency blast radius for package upgrades or CVEs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [package_name, ecosystem]
+              properties:
+                package_name:
+                  type: string
+                ecosystem:
+                  type: string
+                  enum: [gomod, npm, cargo, pypi]
+      responses:
+        '200':
+          description: Graph blast radius analysis calculated
